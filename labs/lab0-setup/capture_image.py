@@ -15,24 +15,27 @@ def gstreamer_pipeline(capture_width=1280, capture_height=720,
         "video/x-raw, format=(string)BGR ! appsink"
     )
 
-HEIGHT=1280
-WIDTH=1920
+HEIGHT=480 * 2
+WIDTH=640 * 2
 center = (WIDTH / 2, HEIGHT / 2)
 M = cv2.getRotationMatrix2D(center, 180, 1.0)
+
 
 nano = False
 if nano:
   cam = cv2.VideoCapture(gstreamer_pipeline(), cv2.CAP_GSTREAMER)
 else:
   # Start Camera
+  # cv2.VideoCapture(0, cv2.CAP_V4L)
   cam = cv2.VideoCapture(0)
   cam.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)  # 3280
   cam.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT) # 2464
 
 
-
 if cam.isOpened():
   val, img = cam.read()
+  print(val, img)
   if val:
     cv2.imwrite('output.png', img)
     #cv2.imwrite('output.png', cv2.warpAffine(img, M, (WIDTH, HEIGHT)))
+
