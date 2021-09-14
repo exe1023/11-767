@@ -36,16 +36,16 @@ We will put the devices in our lab office. If we need to restart the device, any
 5. Now, you should be able to take a picture, record audio, run a basic computer vision model, and run a basic NLP model. Now, write a script that pipes I/O to models. For example, write a script that takes a picture then runs a detection model on that image, and/or write a script that . Include the script at the end of your lab report.
 6. Describe what the script you wrote does (document it.)
 
-a. Record voice with package `soundvoice`.
-b. Convert the audio into the format for Google ASR.
-c. Get the speech recognition results from Google ASR.
-d. Feed the ASR results into a hate speech detection model. The model is a bert-based model (`bert-base-uncased`) trained on part of the Twitter dataset used in [1].
+- Record voice with package `soundvoice`.
+- Convert the audio into the format for Google ASR.
+- Get the speech recognition results from Google ASR.
+- Feed the ASR results into a hate speech detection model. The model is a bert-based model (`bert-base-uncased`) trained on part of the Twitter dataset used in [1].
 
 7. Did you have any trouble getting this running? If so, describe what difficulties you ran into, and how you tried to resolve them.
 
-a. Our kernel crash sometimes when we used the script for camera. Therefore, we decided to work on ASR.
-b. The audio from `soundvoice` is in the format accepted by Google ASR. We used the package `soundfile` to convert it.
-c. Our script is very slow. Both the ASR part and the Bert part are very slow. We may need to solve it in the future.
+- Our kernel crash sometimes when we used the script for camera. Therefore, we decided to work on ASR.
+- The audio from `soundvoice` is in the format accepted by Google ASR. We used the package `soundfile` to convert it.
+- Our script is very slow. Both the ASR part and the Bert part are very slow. We may need to solve it in the future.
 
 
 ## References
