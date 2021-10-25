@@ -12,4 +12,7 @@ python3 asr_prune.py \
         --pretrained_model_name "Shinji Watanabe/librispeech_asr_train_asr_transformer_e18_raw_bpe_sp_valid.acc.best" \
         --fold_length 80000 --fold_length 150 \
         --token_list "${eg_dir}/data/en_token_list/bpe_unigram5000/tokens.txt" \
-        --bpemodel "${eg_dir}/data/en_token_list/bpe_unigram5000/bpe.model" 
+        --bpemodel "${eg_dir}/data/en_token_list/bpe_unigram5000/bpe.model" \
+        --path_head_grad "./head_grad.pt" \
+        --ngpu 1 \
+        --batch_size 20
