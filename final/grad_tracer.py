@@ -40,8 +40,12 @@ class TransformerTracer:
             attn = module.attn_outputs
             _, seq_len, head_dim = attn.shape
             n_head = layer.self_attn.h
-            grad = attn.grad.reshape(-1, n_head, seq_len, head_dim // n_head)
-            attn = attn.reshape(-1, n_head, seq_len, head_dim // n_head)
+            grad = attn.grad.reshape(
+                -1, seq_len, n_head, head_dim // n_head
+            ).transpose(1, 2)
+            attn = attn.reshape(
+                -1, seq_len, n_head, head_dim // n_head
+            ).transpose(1, 2)
             eta = calc_grad_eta(attn, grad)  # eta.shape == [bsz, n_head]
             etas.append(eta)
 
