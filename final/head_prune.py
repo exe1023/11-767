@@ -18,11 +18,17 @@ from jiwer import wer
 
 def main(args):
     random.seed(524)
-    print('test print')
 
     pt = torch.load(args.base_dir / 'head_grad.pt')
     head_scores = pt['accumulator']['encoder']
-    head_ranks = rank_heads(head_scores, normalize=args.normalize)
+    if args.rank == 'importance':
+        head_ranks = rank_heads(head_scores, normalize=args.normalize)
+    else:
+        head_ranks = [
+            (layer, head)
+            for layer in range(head_scores.shape[0])
+            for head in range(head_scores.shape[1])
+        ]
 
     avg_times = []
     avg_wers = []
@@ -48,6 +54,7 @@ def main(args):
             penalty=0.0,
             nbest=1,
             batch_size=1,
+            lm_weight=args.lm_weight,
             device='cuda' if torch.cuda.is_available() else 'cpu'
         )
         prune_head(speech2text.asr_model, retained_heads)
@@ -76,9 +83,9 @@ def main(args):
 
         times = torch.tensor(times)
         er = wer(refs, hyps)
-        print(f'Head ratio: {ratio}')
-        print(f'Time: {times.mean().item():.3f} ({times.std().item():.3f})')
-        print(f'WER: {er}')
+        print(f'Head ratio: {ratio}', flush=True)
+        print(f'Time: {times.mean().item():.3f} ({times.std().item():.3f})', flush=True)
+        print(f'WER: {er}', flush=True)
         avg_times.append(times.mean().item())
         avg_wers.append(er)
 
@@ -109,6 +116,12 @@ def _parse_args():
     parser.add_argument(
         '--beam_size', type=int, default=5
     )
+    parser.add_argument(
+        '--lm_weight', type=float, default=1.0
+    )
+    parser.add_argument(
+        '--rank', type=str, default='importance'
+    )
     args = parser.parse_args()
     return args
 
@@ -123,6 +136,11 @@ def rank_heads(head_scores, normalize='l2'):
         head_scores = (
             head_scores
             / head_scores.pow(2).sum(-1, keepdim=True).sqrt()
+        )
+    elif normalize == 'l1':
+        head_scores = (
+            head_scores
+            / head_scores.abs().sum(-1, keepdim=True)
         )
 
     heads = []
