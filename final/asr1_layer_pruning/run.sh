@@ -10,7 +10,8 @@ valid_set="dev"
 test_sets="test_clean dev_clean"
 
 #asr_config=conf/tuning/train_asr_conformer7_n_fft512_hop_length256.yaml
-asr_config=conf/tuning/train_layer_pruning.yaml
+#asr_config=conf/tuning/train_layer_pruning.yaml
+asr_config=conf/tuning/train_layer_pruning_finetune.yaml
 lm_config=conf/tuning/train_lm_transformer2.yaml
 inference_config=conf/decode_asr.yaml
 
@@ -36,7 +37,7 @@ python get_token_list.py "${pretrained_path}/exp/asr_train_asr_transformer_e18_r
 cp ./token_list.txt data/en_token_list/bpe_unigram5000/tokens.txt
 cp ${bpemodel} data/en_token_list/bpe_unigram5000/
 
-# Note: need to run from stage 8 one time to generate trian data
+# Note: need to run from stage 8 for one time to generate trian data
 
 ./asr.sh \
     --lang en \
