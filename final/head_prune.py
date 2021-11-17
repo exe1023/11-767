@@ -13,6 +13,7 @@ import pandas as pd
 from tqdm import tqdm
 from timeit import default_timer as timer
 from espnet2.bin.asr_inference import Speech2Text
+from espnet.nets.pytorch_backend.transformer.repeat import MultiSequential
 from jiwer import wer
 
 
@@ -21,6 +22,14 @@ def main(args):
 
     pt = torch.load(args.base_dir / 'head_grad.pt')
     head_scores = pt['accumulator']['encoder']
+
+    if args.truncate_layer is not None:
+        head_scores = head_scores[:args.truncate_layer]
+
+    retain_layers = [i
+                     for i in range(head_scores.shape[0])
+                     if str(i) not in args.skip_layers.split(',')]
+    head_scores = head_scores[retain_layers]
     if args.rank == 'importance':
         head_ranks = rank_heads(head_scores, normalize=args.normalize)
     else:
@@ -45,8 +54,11 @@ def main(args):
             if len(retained_heads) < n_retained:
                 retained_heads.add((layer, head))
 
+        name_or_path = None if args.path_model is not None \
+            else args.pretrained_model_name
         speech2text = Speech2Text.from_pretrained(
-            args.pretrained_model_name,
+            name_or_path,
+            asr_model_file=args.path_model,
             maxlenratio=0.0,
             minlenratio=0.0,
             beam_size=args.beam_size,
@@ -57,6 +69,23 @@ def main(args):
             lm_weight=args.lm_weight,
             device='cuda' if torch.cuda.is_available() else 'cpu'
         )
+        model = speech2text.asr_model
+        skip_layers = [int(layer)
+                       for layer in args.skip_layers.split(',')
+                       if layer != '']
+        if args.truncate_layer is not None:
+            skip_layers = skip_layers + list(
+                range(args.truncate_layer, len(model.encoder.encoders))
+            )
+
+        model.encoder.encoders = MultiSequential(*[
+            layer
+            for i, layer in enumerate(
+                    model.encoder.encoders[:args.truncate_layer]
+            )
+            if i not in skip_layers
+        ])
+
         prune_head(speech2text.asr_model, retained_heads)
 
         egs = pd.read_csv(f'{args.dir_librispeech}/test_clean.csv')
@@ -84,7 +113,8 @@ def main(args):
         times = torch.tensor(times)
         er = wer(refs, hyps)
         print(f'Head ratio: {ratio}', flush=True)
-        print(f'Time: {times.mean().item():.3f} ({times.std().item():.3f})', flush=True)
+        print(f'Time: {times.mean().item():.3f} ({times.std().item():.3f})',
+              flush=True)
         print(f'WER: {er}', flush=True)
         avg_times.append(times.mean().item())
         avg_wers.append(er)
@@ -103,6 +133,7 @@ def _parse_args():
         '_bpe_sp_valid.acc.best',
         help=''
     )
+    parser.add_argument('--path_model', type=str, default=None)
     parser.add_argument(
         '--dir_librispeech', type=Path,
         default=Path('~/espnet/data/librispeech/LibriSpeech/').expanduser()
@@ -121,6 +152,12 @@ def _parse_args():
     )
     parser.add_argument(
         '--rank', type=str, default='importance'
+    )
+    parser.add_argument(
+        '--truncate_layer', type=int, default=None
+    )
+    parser.add_argument(
+        '--skip_layers', type=str, default=''
     )
     args = parser.parse_args()
     return args

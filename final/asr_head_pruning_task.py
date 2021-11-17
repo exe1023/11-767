@@ -6,6 +6,7 @@ from espnet2.torch_utils.set_all_random_seed import set_all_random_seed
 from espnet2.bin.asr_inference import Speech2Text
 from espnet2.train.distributed_utils import DistributedOption
 from espnet2.torch_utils.device_funcs import to_device
+from espnet.nets.pytorch_backend.transformer.repeat import MultiSequential
 from grad_tracer import TransformerTracer
 from tqdm import tqdm
 
@@ -19,8 +20,11 @@ class ASRHeadPruningTask(ASRTask):
         required += ["pretrained_model_name"]
 
         group = parser.add_argument_group(description="Head-pruning related")
-        group.add_argument('--pretrained_model_name', type=str)
+        group.add_argument('--pretrained_model_name', type=str, default=None)
         group.add_argument('--path_head_grad', type=str)
+        group.add_argument('--path_model', type=str, default=None)
+        group.add_argument('--path_config', type=str, default=None)
+        group.add_argument('--truncate_layer', type=int, default=None)
 
     @classmethod
     def build_model(cls, args: argparse.Namespace) -> ESPnetASRModel:
@@ -40,13 +44,28 @@ class ASRHeadPruningTask(ASRTask):
         #     device="cuda" if args.ngpu > 0 else "cpu",
         # )
 
-        speech2text = Speech2Text.from_pretrained(
-            args.pretrained_model_name,
-            ctc_weight=0,
-            device='cuda'
-        )
+        if args.pretrained_model_name is not None:
+            speech2text = Speech2Text.from_pretrained(
+                args.pretrained_model_name,
+                ctc_weight=0,
+                device='cuda'
+            )
+        elif args.path_model is not None:
+            speech2text = Speech2Text.from_pretrained(
+                asr_model_file=args.path_model,
+                asr_train_config=args.path_config,
+                device='cuda'
+            )
+
         model = speech2text.asr_model
         model.train()
+
+        if args.truncate_layer is not None:
+            model.encoder.encoders = MultiSequential(*[
+                layer
+                for layer in model.encoder.encoders[:args.truncate_layer]
+            ])
+
         tracer = TransformerTracer(model)
         tracer.preload_attn_func()
 
