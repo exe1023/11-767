@@ -164,6 +164,7 @@ class ESPnetASRModel(AbsESPnetModel):
                         inter_out, encoder_out_lens, text, text_lengths
                     )     
                     inter_ctc_loss += inter_ctc
+                inter_ctc_loss = (inter_ctc_loss) / len(intermediate_outputs)
                 loss_ctc = (1-w) * loss_ctc + w * inter_ctc_loss
 
         # 2c. RNN-T branch

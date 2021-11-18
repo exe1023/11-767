@@ -14,10 +14,8 @@ keep_nbest_models: 10
 chunk_length: 500                                                                                                                                                                                                                         
 chunk_shift_ratio: 0.5 
 
-output_dir: "asr_finetune_layer_pruning"
 init_param: 
     - /usr0/home/yitingye/miniconda3/envs/odml/lib/python3.7/site-packages/espnet_model_zoo/653d10049fdc264f694f57b49849343e/exp/asr_train_asr_transformer_e18_raw_bpe_sp/54epoch.pth
-
 
 encoder: transformer
 encoder_conf:
@@ -30,9 +28,7 @@ encoder_conf:
     num_blocks: 18                                                                                                                                                                                                                          
     output_size: 512                                                                                                                                                                                                                        
     positional_dropout_rate: 0.1  
-    stochastic_depth_rate: 0.3
-    intermediate_layers: 
-    - 16
+    stochastic_depth_rate: 0.5
 
 decoder: transformer
 decoder_conf:
@@ -51,7 +47,7 @@ model_conf:
 
 optim: adam
 optim_conf:
-    lr: 0.002
+    lr: 0.0002
 scheduler: warmuplr
 scheduler_conf:
     warmup_steps: 25000
