@@ -200,10 +200,8 @@ class TransformerEncoder(AbsEncoder):
                 ):
                     # intermediate branches also require normalization.
                     encoder_output = xs_pad
-                    if isinstance(encoder_output, tuple):
-                        encoder_output = encoder_output[0]
-                        if self.normalize_before:
-                            encoder_output = self.after_norm(encoder_output)
+                    if self.normalize_before:
+                        encoder_output = self.after_norm(encoder_output)
                     intermediate_outputs.append(encoder_output)
 
  
