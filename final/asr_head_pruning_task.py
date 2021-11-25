@@ -47,13 +47,14 @@ class ASRHeadPruningTask(ASRTask):
         if args.pretrained_model_name is not None:
             speech2text = Speech2Text.from_pretrained(
                 args.pretrained_model_name,
-                ctc_weight=0,
+                ctc_weight=1.0,
                 device='cuda'
             )
         elif args.path_model is not None:
             speech2text = Speech2Text.from_pretrained(
                 asr_model_file=args.path_model,
                 asr_train_config=args.path_config,
+                ctc_weight=1.0,
                 device='cuda'
             )
 

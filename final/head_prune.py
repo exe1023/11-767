@@ -67,6 +67,7 @@ def main(args):
             nbest=1,
             batch_size=1,
             lm_weight=args.lm_weight,
+            ngram_weight=args.ngram_weight,
             device='cuda' if torch.cuda.is_available() else 'cpu'
         )
         model = speech2text.asr_model
@@ -158,6 +159,9 @@ def _parse_args():
     )
     parser.add_argument(
         '--skip_layers', type=str, default=''
+    )
+    parser.add_argument(
+        '--ngram_weight', type=float, default=0.9
     )
     args = parser.parse_args()
     return args
